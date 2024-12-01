@@ -1,4 +1,4 @@
-package com.example.listacompra
+package com.example.listacompra.ui.screens
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,28 +30,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-data class Producto(var realizado: Boolean = false, val nombreProducto: String)
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.listacompra.model.Producto
+import com.example.listacompra.ui.state.ListaCompraEstado
+import com.example.listacompra.ui.state.ListaCompraViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenPrincipal() {
+fun ScreenPrincipal(listaViewModel : ListaCompraViewModel = viewModel()) {
     //creamos una variable mutable ya que en el textfield vamos cambiando los elementos a añadir
-    var nombre by remember { mutableStateOf("") }
-    val nombres = remember { mutableStateListOf<Producto>() }
+    //var nombre by remember { mutableStateOf("") }
+    //val nombres = remember { mutableStateListOf<Producto>() }
+    val estado by listaViewModel.uiState.collectAsState() // No se necesita gestionar manualmente las suscripciones o llamadas para actualizar la UI.
     Scaffold(topBar = {
         TopAppBar(title = { Text("Lista de la compra") },
             actions = {//borra los productos seleccionados
             OutlinedButton(
                 onClick = {
-                    nombres.removeAll { it.realizado }
+                    //nombres.removeAll { it.realizado }
                 },
-                enabled = nombres.any { !it.realizado } // Habilitado si hay al menos uno seleccionado
+                enabled = true // Habilitado si hay al menos uno seleccionado
             ) {
                 Icon(imageVector = Icons.Filled.Delete, contentDescription = "Borrar seleccionados")
             }
         })
     }) {
+
         Column(
             modifier = Modifier
                 .padding(it)
@@ -60,8 +65,9 @@ fun ScreenPrincipal() {
                 text = "Introduce un producto:",
                 modifier = Modifier.padding(end = 8.dp) // Espacio entre la label y el TextField
             )
-            TextField(value = nombre, onValueChange = {
-                nombre = it //guardamos el nombre
+            TextField(value = estado.nombreProducto, onValueChange = {
+                listaViewModel.cambiarNombreproducto(it) //recibe lo que tiene el TextField y lo guarda en el estado
+
             }, modifier = Modifier.fillMaxWidth(), label = {
                 Text("Producto: ")
             })
@@ -71,21 +77,18 @@ fun ScreenPrincipal() {
                 contentAlignment = Alignment.Center // Centra el contenido dentro del Box
             ) {
                 Button(onClick = {
-                    if (nombre != "") {
-                        nombres.add(Producto(nombreProducto = nombre))
-                        nombre = ""
-                    }
+                    listaViewModel.agregarProducto()
                 }) {
-                    Text(text = "Añadir")
+                    Text(text = "Agregar")
                 }
             }
-            VerLista(listaNombres = nombres)
+            VerLista(listaNombres = listaViewModel.getListaProductos(), listaViewModel,estado)
         }
     }
 }
 
 @Composable
-fun VerLista(listaNombres: MutableList<Producto>) {
+fun VerLista(listaNombres: List<Producto>, listaViewModel: ListaCompraViewModel,estado : ListaCompraEstado) {
     //el LazyColumn trabaja con items
     LazyColumn() {
         item {
@@ -96,27 +99,29 @@ fun VerLista(listaNombres: MutableList<Producto>) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                var checkeado by remember {
-                    mutableStateOf(producto.realizado)
-                }
-                Checkbox(checked = checkeado, onCheckedChange = {
-                    checkeado = it
-                    producto.realizado = it
+                //var checkeado by remember {
+                //    mutableStateOf(producto.realizado)
+                //}
+                Checkbox(checked = estado.checkeado, onCheckedChange = {
+                    //checkeado = it
+                    //producto.realizado = it
+                    listaViewModel.seleccionarProducto()
                 })
                 Text(producto.nombreProducto)
                 Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = if (estado.checkeado) "Realizado" else "No realizado",
+                    modifier = Modifier.padding(end = 8.dp)
+                )
                 Button(onClick = {
-                    listaNombres.remove(producto)
+                    //listaNombres.remove(producto)
+                    listaViewModel.borrarSeleccionados(producto)
                 }) {
                     Text(text = "Borrar")
                 }
                 //Text(producto.realizado.toString()) //para que salga el valor (true o false)
-                Text(
-                    text = if (producto.realizado) "Realizado" else "No realizado",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
 
+            }
 
         }
 
