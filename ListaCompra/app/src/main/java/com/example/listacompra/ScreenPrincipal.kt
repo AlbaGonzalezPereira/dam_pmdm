@@ -9,9 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -26,7 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-data class Producto(var realizado : Boolean = false, val nombreProducto : String)
+data class Producto(var realizado: Boolean = false, val nombreProducto: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,10 +38,24 @@ fun ScreenPrincipal() {
     //creamos una variable mutable ya que en el textfield vamos cambiando los elementos a añadir
     var nombre by remember { mutableStateOf("") }
     val nombres = remember { mutableStateListOf<Producto>() }
-    Scaffold(topBar = { TopAppBar(title = { Text("Lista de la compra") }) }) {
-        Column(modifier = Modifier
-            .padding(it)
-            .fillMaxSize()) {
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Lista de la compra") },
+            actions = {//borra los productos seleccionados
+            OutlinedButton(
+                onClick = {
+                    nombres.removeAll { it.realizado }
+                },
+                enabled = nombres.any { !it.realizado } // Habilitado si hay al menos uno seleccionado
+            ) {
+                Icon(imageVector = Icons.Filled.Delete, contentDescription = "Borrar seleccionados")
+            }
+        })
+    }) {
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+        ) {
             Text(
                 text = "Introduce un producto:",
                 modifier = Modifier.padding(end = 8.dp) // Espacio entre la label y el TextField
@@ -84,7 +102,7 @@ fun VerLista(listaNombres: MutableList<Producto>) {
                 Checkbox(checked = checkeado, onCheckedChange = {
                     checkeado = it
                     producto.realizado = it
-                } )
+                })
                 Text(producto.nombreProducto)
                 Spacer(modifier = Modifier.weight(1f))
                 Button(onClick = {
