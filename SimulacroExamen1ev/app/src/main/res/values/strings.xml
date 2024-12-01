@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SimulacroExamen1ev</string>
+    <string name="subtitulo">Pulsa en \'Jugar\' para comenzar</string>
+    <string name="titulo">Bienvenido al juego de Carta Alta</string>
+</resources>
